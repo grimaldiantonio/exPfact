@@ -60,7 +60,7 @@ def loo_crossval(dexp, time_points, ass, lam, pH, temp, seq, res1, resn):
 
         out_file = "CVout.rm%s" % str(k)
 
-        dexp_train, times_train, dexp_test, times_test = L1OUT_dataset(dexp, time_points, k)
+        dexp_train, times_train, dexp_test, times_test = loo_dataset(dexp, time_points, k)
 
         run(base_dir=os.getcwd(), dexp=dexp_train, assignments=ass, pfact=None,
             random_steps=None, time_points=times_train, harmonic_term=lam,
