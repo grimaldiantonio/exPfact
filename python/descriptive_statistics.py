@@ -36,7 +36,7 @@ def select_top_solutions(out_file, n):
     log.info("Cost function of all solutions stored in file diff.list")
 
     p = []
-    for i in range(int(sorted_files.shape[0]*n/100)):
+    for i in range(int(n)):
         file = sorted_files[0][i]
         p.append(list(read_pfact(file.replace('.diff', '.pfact'))))
 
@@ -44,9 +44,9 @@ def select_top_solutions(out_file, n):
         for i in range(len(p)):
             for j in range(len(p[i])):
                 if j == len(p[i])-1:
-                    f.write("{: <12}\n".format(round(p[i][j], 5)))
+                    f.write("%5.5f\n" % p[i][j])
                 else:
-                    f.write("{: <12} ".format(round(p[i][j], 5)))
+                    f.write("%5.5f " % p[i][j])
     log.info("Top %s solutions stored in all.sp" % str(sorted_files.shape[0]*n/100))
 
 

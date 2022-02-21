@@ -107,7 +107,7 @@ def fit_pfact(init_array, dexp, time_points, assignments, harmonic_term,
                              method='L-BFGS-B',
                              bounds=bounds,
                              tol=tol,
-                             options={'disp': True,
+                             options={'disp': False,
                                       'maxfun':  1_000_000_000,
                                       'maxiter': 1_000_000_000
                                       }

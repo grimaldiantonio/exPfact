@@ -35,6 +35,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #  --tol:   tolerance threshold for least squares convergence (default: 1e-6)
 #  --harm:  introduces a penalty for large differences in predicted lnP
 #           for adjacent residues
+#  --rep:   number of minimization to be performed (default: 1)
+#  --ncores:number of cores to be used for the calculations (default: 1)
 #
 ###############################################################################
 """
@@ -42,6 +44,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import sys
 import argparse
+import time
+from multiprocessing import Pool
 
 from calc_dpred import calculate_dpred
 
@@ -79,6 +83,7 @@ def run(base_dir, dexp, assignments, pfact, random_steps, time_points,
     :param tolerance: tolerance value for minimisation convergence.
     :return:
     """
+    log.info("Running ExPfact, output name: %s" % output_file)
 
     assignment_set = set()
     for ass in assignments:
@@ -164,6 +169,7 @@ def main(argv):
     parser.add_argument("--pH")
     parser.add_argument("--seq")
     parser.add_argument("--rep")
+    parser.add_argument("--ncores")
 
     if sys.argv[1].endswith('.json'):
         config = read_configuration(sys.argv[1])
@@ -240,32 +246,41 @@ def main(argv):
         else:
             n_rep = 1
 
+        if opts.ncores:
+            n_cores = int(opts.ncores)
+        else:
+            n_cores = 1
+
     assignments = read_assignments(config['assignments'])
 
-    for i in range(n_rep):
-        log.info("Minimization %s of %s" % (str(i),str(n_rep)))
-        if n_rep > 1:
-            outfile = config['output']+str(i)
-        else:
-            outfile = config['output']
-
-        run(
-            config['base'],
-            config['dexp'],
-            assignments,
-            config['pfact'],
-            config['random_search_steps'],
-            config['times'],
-            config['harmonic_factor'],
-            outfile,
-            config['tolerance'],
-            config['weights'],
-            config['pH'],
-            config['temperature'],
-            config['sequence'],
-            config['res1'],
-            config['resn']
-            )
+    tic = time.time()
+    log.info("ExPfact starts")
+    with Pool(n_cores) as p:
+        args = []
+        for i in range(1, n_rep+1):
+            if n_rep > 1:
+                outfile = config['output']+str(i)
+            else:
+                outfile = config['output']
+            args.append((config['base'],
+                         config['dexp'],
+                         assignments,
+                         config['pfact'],
+                         config['random_search_steps'],
+                         config['times'],
+                         config['harmonic_factor'],
+                         outfile,
+                         config['tolerance'],
+                         config['weights'],
+                         config['pH'],
+                         config['temperature'],
+                         config['sequence'],
+                         config['res1'],
+                         config['resn']))
+        p.starmap(run, args)
+    toc = time.time()
+    tot_time = toc-tic
+    log.info("ExPfact ends, total time: %5.5f" % tot_time)
 
 
 if __name__ == "__main__":
@@ -273,6 +288,6 @@ if __name__ == "__main__":
         sys.argv[1]
     except IndexError:
         print(__doc__)
-        log.error("Error while running ExPfact.py")
+        log.error("Error while initializing ExPfact.py")
         exit()
     main(sys.argv[1:])

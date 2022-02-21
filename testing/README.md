@@ -22,30 +22,30 @@ Please rename the file `test.Dpred` as `test.Dexp`:
 
 To find a solution, i.e. a pattern of protection factors, which accurately fits the data, ExPfact performs a random search followed by a least-squares minimization.
 The random search consists in i) randomly initializing `--rand` sets of protection factors with the constraint `0<ln(Pfact)<=20`, ii) calculate the cost function (sum of squared residuals) for each set, and iii) select the set with lowest cost function.
-The selected pattern of protection factors is used as initial guess for the minimization. 
+The selected pattern of protection factors is used as initial guess for the minimization.
 
 To calculate one solution:
 
 ` python ../python/exPfact.py --temp 300 --pH 7.0 --dexp test.Dexp --ass test.list --weights test.weights --harm 0 --rand 10000 --seq test.seq --out out `
 
 Parameters:
-* `--temp 300`: temperature of the experiment in K 
-* `--pH 7`: pH of the experiment; please insert the corrected `pH = pHread + 0.4` 
+* `--temp 300`: temperature of the experiment in K
+* `--pH 7`: pH of the experiment; please insert the corrected `pH = pHread + 0.4`
 * `--dexp test.Dexp`: file containing the experimental deuterium uptake for all peptide at all time points
 * `--ass test.list`: peptide assignments
-* `--weights test.weights`: weights to be assigned to each measure. For synthetic data with no error, these weights are irrelevant (all set to 1). If available, use the invere of the standard deviation on measured deuterium uptake. 
+* `--weights test.weights`: weights to be assigned to each measure. For synthetic data with no error, these weights are irrelevant (all set to 1). If available, use the invere of the standard deviation on measured deuterium uptake.
 * `--harm 0`: if different from 0, it introduces a penalty term to the cost function (see below)
 * `--rand 10000`: number of random sets of protection factors in the random search.
 * `--seq test.seq`: file containing the sequence of the protein.
 * `--out out`: name used for output files
 
 The script generates three output files:
-* `out.pfact`: the predicted pattern of protection factors. 
+* `out.pfact`: the predicted pattern of protection factors.
 * `out.Dpred`: the predicted deuterium uptake.
 * `out.diff`: sum of squared residuals between predicted and experimental uptake for each peptide.
 
 In the case of synthetic data, the predicted deuterium uptake contained in the file `out.Dpred` should be almost identical to the experimental values `test.Dexp`.
-However, the predicted protection factors `out.pfact` could be different from the reference `test.pfact` because of underdetermination. 
+However, the predicted protection factors `out.pfact` could be different from the reference `test.pfact` because of underdetermination.
 The sum of squared residuals should approach zero for all peptides in the file `out.diff`.
 
 ## Producing multiple solutions
@@ -53,18 +53,22 @@ The sum of squared residuals should approach zero for all peptides in the file `
 To generate multiple solutions, just add the parameter `--rep` to the previous command.
 To produce 100 predictions of protection factors, all with similar agreement with protection factors:
 
-` python ../python/exPfact.py --temp 300 --pH 7.0 --dexp test.Dexp --ass test.list --weights test.weights --harm 0 --rand 10000 --seq test.seq --out out --rep 100`
+` python ../python/exPfact.py --temp 300 --pH 7.0 --dexp test.Dexp --ass test.list --weights test.weights --harm 0 --rand 10000 --seq test.seq --out out --rep 100  --ncores 4`
 
-Variability in the prediction for specific residues provides a measure of the underdetermination of the problem. 
+Additional parameters:
+* `--rep`: the number of minimization procedures to be performed (i.e. the number of solutions to be calculated)
+* `--ncores`: the number of cores to run the calculations in parallel (default: 1).
+
+Variability in the prediction for specific residues provides a measure of the underdetermination of the problem.
 Use different assignment sets to see how the overlap of assigned peptides affect the quality of the prediction.
 
 Similarly to the case of a single solution, three outputs are generated, namely `out[i].pfact`, `out[i].Dpred` and `out[i].diff`, where `[i]` identifies the i-th solution.
 
 ## Descriptive statistics
 
-To analyse the outcomes of multiple minimization calculating average, median, minimum/maximum values, digit: 
+To analyse the outcomes of multiple minimization calculating average, median, minimum/maximum values, digit:
 
-` python ../python/descriptive.py --res out --top 50 `
+` python ../python/descriptive_statistics.py --res out --top 50 `
 
 Parameters:
 * `--res`: prefix of resutls to be analysed (equivalent to the paramter `--out` in the command to generate multiple solutions). E.g.: if outputs out1.pfact, ..., out100.pfact have been previously generated, use `--res out`
@@ -82,19 +86,19 @@ Outputs:
 | Run 2 | lnP(2,1)  | lnP(2,2)  | ... | lnP(2,N)  |
 |  ...  |    ...    |    ...    | ... |    ...    |
 
-Each column in the file `all.sp` can be used to build the histogram of protection factors predicted for a specific residue. 
+Each column in the file `all.sp` can be used to build the histogram of protection factors predicted for a specific residue.
 
 ## Clustering algorithm
 
-The clustering algorithm is applied to the results in the file `all.sp` previously generated. 
+The clustering algorithm is applied to the results in the file `all.sp` previously generated.
 
-The clustering algorithm is based on Gaussian mixture models. 
-Regions covered by contiguous overlapping peptides are considered one at a time. 
-The histograms of the protection factors of every residue in this region are combined into a multi-dimensional probability distribution. 
-The probability distribution is fitted with a mixture of gaussians with number of components varying from 1 to 99. 
-The final number of components is decided based on the Bayesian Information Criterion (BIC). 
+The clustering algorithm is based on Gaussian mixture models.
+Regions covered by contiguous overlapping peptides are considered one at a time.
+The histograms of the protection factors of every residue in this region are combined into a multi-dimensional probability distribution.
+The probability distribution is fitted with a mixture of gaussians with number of components varying from 1 to 99.
+The final number of components is decided based on the Bayesian Information Criterion (BIC).
 
-To run the clustering algorithm: 
+To run the clustering algorithm:
 
 ``` python ../python/clustering.py --ass test.ass ```
 
@@ -103,9 +107,9 @@ To run the clustering algorithm:
 Outputs: for an area covered by overlapping peptides starting at residue `i` and ending at residue `j`, the following output files are generated:
 
 * `i-j.mclust` contains the mean and variance of the protection factor of each residue for every component. The output file consists of three columns (`%residue %pfact %variance`). Components are separated by a line containing the symbol `&`.
-* `i-j.mod` contains the mean of the protection factor of each residue for every component. Every column is a pattern of protection factors, every row represents an amino acid. 
+* `i-j.mod` contains the mean of the protection factor of each residue for every component. Every column is a pattern of protection factors, every row represents an amino acid.
 * `i-j.var` contains the variances of the protection factor of each residue for every component (same format as `i-j.mod`).
-* `i-j.pro` contains the probability assigned to each component. The output consists of two columns: the first is the component index, the second is the probability assigned to that specific component. Components are sorted from the most to the least probable. 
+* `i-j.pro` contains the probability assigned to each component. The output consists of two columns: the first is the component index, the second is the probability assigned to that specific component. Components are sorted from the most to the least probable.
 * `i-j.bic` contains the BIC scores for number of components ranging 1 to 99.
 
 ## Predicting the shape of the isotopic envelope
@@ -118,7 +122,7 @@ The fully protonated isotopic envelope can be calculated as the convolution of t
 
 The script generates a file `<sequence>.txt` containing the fully protonated envelope of a peptide with sequence `<sequence>` and charge state `<charge state>`. Alternatively, the same envelope can be obtained using online tools like [MS-Isotope](http://prospector.ucsf.edu/prospector/cgi-bin/msform.cgi?form=msisotope).
 
-To predict the shape of the isotopic envelope at given exchange times, 
+To predict the shape of the isotopic envelope at given exchange times,
 
 ``` python ../python/isenv.py --mode p --ass test.ass --seq test.seq --T_label 300 --pH_label 7 --pfact test.pfact --times test.times --pep 2 --z 1 --prefix iso ```
 
@@ -126,7 +130,7 @@ The mode `p` stands for "predict" and only performs a prediction of the isotopic
 
 ## Adding a penalization term to the cost function
 
-In order to avoid overfitting and encourage the finding of solutions with no abrupt changes between protection factors of adjacent residues (unless guided by experimental data), 
+In order to avoid overfitting and encourage the finding of solutions with no abrupt changes between protection factors of adjacent residues (unless guided by experimental data),
 a penalty term can be added to the cost function using the parameter `--harm`.
 To choose the best value for the penalty costnant (i.e., the value of `--harm`), leave-one-out cross validation can be performed:
 
