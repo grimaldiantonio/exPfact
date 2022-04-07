@@ -2,7 +2,10 @@
 
 ExPfact is a statistically robust approach to estimate protection factors at resolution of the single amide from sparse and underdetermined HDX-MS data. Depending on the quality of the dataset analysed, ExPfact returns one or a discrete number of possible patterns of protection factors in agreement with experimental data. 
 
-If you use ExPfact in your work, please cite [Skinner et al., 'Estimating constraints for protection factors from HDX-MS data' (2019)](https://doi.org/10.1016/j.bpj.2019.02.024)
+If you use ExPfact in your work, please cite:
+
+* [Skinner et al., 'Estimating constraints for protection factors from HDX-MS data' (2019)](https://doi.org/10.1016/j.bpj.2019.02.024)
+* [Stofella et al., 'High resolution hydrogen-deuterium protection factors from sparse MS data validated by NMR measurements' (2022)](https://pubs.acs.org/doi/full/10.1021/jasms.2c00005)
 
 ## Install
 
