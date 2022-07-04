@@ -124,7 +124,7 @@ The script generates a file `<sequence>.txt` containing the fully protonated env
 
 To predict the shape of the isotopic envelope at given exchange times,
 
-``` python ../python/isenv.py --mode p --ass test.ass --seq test.seq --T_label 300 --pH_label 7 --pfact test.pfact --times test.times --pep 2 --z 1 --prefix iso ```
+``` python ../python/isotopic_envelope.py --mode p --ass test.ass --seq test.seq --T_label 300 --pH_label 7 --pfact test.pfact --times test.times --pep 2 --z 1 --prefix iso ```
 
 The mode `p` stands for "predict" and only performs a prediction of the isotopic envelope (no comparison with experimental data). The isotopic envelope is predicted for peptide with index `--pep` from the assignment file `--ass`. The sequence of the protein (`--seq`), the temperature and pH of the label buffer (`--T_label`,`--pH_label`) are required to calculate intrinsic exchange rates; a pattern of protection factors (`--pfact`) is required. The isotopic envelope is predicted for every time contained in the file specified in `--times` for charge state `--z`. The results are saved in a folder named `--prefix`.
 
