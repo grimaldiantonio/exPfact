@@ -38,7 +38,7 @@ def test_forward_intrinsic_rates(seq, kint_englander):
     by the script kint.py. The results are tested against the rates obtained
     for the same sequence by the Englander group excel spreadsheet """
     # intrinsic exchange rates calculated by kint.py
-    kint, pro = calculate_kint_for_sequence(1,len(seq),seq,300,7)
+    kint, pro = calculate_kint_for_sequence(1,len(seq),seq,300,7,reference="PDLA")
     for i in range(len(seq)):
         # check that the rates are the same (maximum difference 1%)
         assert np.abs(kint[i]/kint_englander[i]-1) < 1
@@ -51,7 +51,7 @@ def test_prolines_kint(seq, expected_prolines):
     """ Check that the script kint.py correctly identifies prolines along
     the sequence of the peptide and that the intrinsic exchange rate at those
     residue is set to -1.0 """
-    kint, prolines = calculate_kint_for_sequence(1,len(seq),seq,300,7)
+    kint, prolines = calculate_kint_for_sequence(1,len(seq),seq,300,7,reference="PDLA")
     assert len(prolines) == len(expected_prolines)
     for i in range(len(prolines)):
         assert prolines[i] == expected_prolines[i]

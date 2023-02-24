@@ -30,7 +30,8 @@ para = {
     "L": [-0.57, -0.13, -0.58, -0.21],
     "M": [-0.64, -0.28, -0.01,  0.11],
     "N": [-0.58, -0.13,  0.49,  0.32],
-    "P": [99999, -0.19, 99999, -0.24],
+    "P": [99999, -0.19, 99999, -0.24], # trans
+    "B": [99999, -0.85, 99999,  0.60], # proline cis
     "Q": [-0.47, -0.27,  0.06,  0.20],
     "R": [-0.59, -0.32,  0.08,  0.22],
     "S": [-0.44, -0.39,  0.37,  0.30],
@@ -49,8 +50,12 @@ lamb_Cterm_base = -1.80
 pKD = 15.05
 R = 1.987
 
-ka = 10**(1.62) / 60
-kb = 10**(10.18) / 60
+ka_pdla = 10**(1.62) / 60
+kb_pdla = 10**(10.18) / 60
+kw_pdla = 10**(-1.5) / 60
+
+ka = 10**(2.04) / 60
+kb = 10**(10.36) / 60
 kw = 10**(-1.5) / 60
 
 Ea = 14000
@@ -67,22 +72,22 @@ def get_OD(pH):
 
 
 def get_temperature_normalization(temperature):
-    return (1 / temperature - 1 / 293) / R
+    return (1 / temperature - 1 / 293.15) / R
 
 
 def get_pK_his(temperature):
     Ea_his = 7500
-    return -log10(10**(-7.42) * exp(-Ea_his * (1 / temperature - 1 / 278) / R))
+    return -log10(10**(-7.42) * exp(-Ea_his * (1 / temperature - 1 / 278.15) / R))
 
 
 def get_pK_asp(temperature):
     Ea_asp = 1000
-    return -log10(10**(-4.48) * exp(-Ea_asp * (1 / temperature - 1 / 278) / R))
+    return -log10(10**(-4.48) * exp(-Ea_asp * (1 / temperature - 1 / 278.15) / R))
 
 
 def get_pK_glu(temperature):
     Ea_glu = 1083
-    return -log10(10**(-4.93) * exp(-Ea_glu * (1 / temperature - 1 / 278) / R))
+    return -log10(10**(-4.93) * exp(-Ea_glu * (1 / temperature - 1 / 278.15) / R))
 
 
 def get_Fta(temperature):

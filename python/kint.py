@@ -20,7 +20,7 @@ import numpy as np
 
 
 def calculate_kint_for_sequence(first_residue, last_residue, seq,
-                                temperature, pH):
+                                temperature, pH, reference = "3Ala"):
     prolines = []
     kint = np.zeros((last_residue))
     kint.fill(-1)
@@ -31,7 +31,7 @@ def calculate_kint_for_sequence(first_residue, last_residue, seq,
         if not res1 == "":
             if assignment - first_residue == 0:
                 kint[assignment - 1] = -1
-            elif seq[jj] == "P":
+            elif seq[jj] == "P" or seq[jj] == "B":
                 kint[assignment - 1] = -1
                 prolines.append(first_residue + jj)
             else:
@@ -39,7 +39,8 @@ def calculate_kint_for_sequence(first_residue, last_residue, seq,
                                                                 assignment,
                                                                 len(seq),
                                                                 temperature,
-                                                                pH)
+                                                                pH,
+                                                                reference)
         jj += 1
         res1 = res
 
@@ -47,7 +48,7 @@ def calculate_kint_for_sequence(first_residue, last_residue, seq,
 
 
 def calculate_kint_per_residue(residue1, residue2, num, length,
-                               temperature, pH):
+                               temperature, pH, reference = "3Ala"):
 
     lamb1 = acid(residue2, temperature, pH, "lamb")
     rho1 = acid(residue1, temperature, pH, "rho")
@@ -64,10 +65,16 @@ def calculate_kint_per_residue(residue1, residue2, num, length,
     elif (num == length):
         lamb2 += cst.lamb_Cterm_base
     Fb = 10**(lamb2 + rho2)
-
-    kint = Fa * cst.ka * cst.get_D(pH) * cst.get_Fta(temperature) * 3600 +\
-        Fb * cst.kb * cst.get_OD(pH) * cst.get_Ftb(temperature) * 3600 +\
-        Fb * cst.kw * cst.get_Ftw(temperature) * 3600
+    
+    if reference == "3Ala":
+        kint = Fa * cst.ka * cst.get_D(pH) * cst.get_Fta(temperature) * 3600 +\
+            Fb * cst.kb * cst.get_OD(pH) * cst.get_Ftb(temperature) * 3600 +\
+            Fb * cst.kw * cst.get_Ftw(temperature) * 3600
+    elif reference == "PDLA":
+        kint = Fa * cst.ka_pdla * cst.get_D(pH) * cst.get_Fta(temperature) * 3600 +\
+            Fb * cst.kb_pdla * cst.get_OD(pH) * cst.get_Ftb(temperature) * 3600 +\
+            Fb * cst.kw_pdla * cst.get_Ftw(temperature) * 3600
+        
 
     return kint	 # in hr-1
 

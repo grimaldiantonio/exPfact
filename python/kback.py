@@ -58,7 +58,7 @@ def calculate_kback_for_sequence(first_residue, last_residue, seq, temperature, 
         if not res1 == "":
             if assignment - first_residue == 0:
                 kback[assignment - 1] = -1
-            elif seq[jj] == "P":
+            elif seq[jj] == "P" or seq[jj] == "B":
                 kback[assignment - 1] = -1
                 prolines.append(first_residue + jj)
             else:
