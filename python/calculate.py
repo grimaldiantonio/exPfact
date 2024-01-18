@@ -73,9 +73,9 @@ def do_random_search(kint, search_steps, pfactor_filter, dexp,
 
     score_array = {}
     for i in range(search_steps):
-        init_array = [np.random.uniform(0.01, 20.00) if ii != 0
+        init_array = [np.random.uniform(0.01, 30.00) if ii != 0
                       and ii + 1 not in prolines and ii + 1 in pfactor_filter
-                      else -1 for ii in range(max(pfactor_filter))]
+                      else -1 for ii in range(len(kint))]
 
         score = cost_function(init_array, dexp, time_points,
                           assignments, harmonic_term, kint, weights)
@@ -109,7 +109,7 @@ def fit_pfact(init_array, dexp, time_points, assignments, harmonic_term,
                              tol=tol,
                              options={'disp': False,
                                       'maxfun':  1_000_000_000,
-                                      'maxiter': 1_000_000_000
+                                      'maxiter': 1_000_000_000,
                                       }
                              )
     return pfit

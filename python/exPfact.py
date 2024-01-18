@@ -98,8 +98,7 @@ def run(base_dir, dexp, assignments, pfact, random_steps, time_points,
             pfactor_filter.add(ass[1])
 
     kint, prolines = calculate_kint_for_sequence(res1, resn, seq,
-                                                 temperature, pH)
-
+                                                 temperature, pH)    
     if not pfact:
         if random_steps:
             rand_output = do_random_search(
@@ -119,12 +118,12 @@ def run(base_dir, dexp, assignments, pfact, random_steps, time_points,
         else:
             init_array = [1 if ii not in prolines or ii == 0
                           or ii + 1 in pfactor_filter
-                          else -1 for ii in range(max(pfactor_filter))]
+                          else -1 for ii in range(len(seq))]
 
     else:
         init_array = read_pfact(pfact)
 
-    bounds = [(0.00001, 20) if x >= 0 else (-1, -1) if x == -1
+    bounds = [(0.00001, 30) if x >= 0 else (-1, -1) if x == -1
               else (0, 0) for x in init_array]
 
     pfit = fit_pfact(init_array, dexp, time_points, assignments,
