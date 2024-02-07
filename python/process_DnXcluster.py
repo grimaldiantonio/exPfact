@@ -83,39 +83,51 @@ if __name__ == '__main__':
         print("  Number of peptides: %d" % len(peptides))
         
         # Write assignment file
-        with open(infile.replace(".csv","_%s.ass" % state), 'w') as f:
+        with open(infile.replace(".csv","_%s.list" % state), 'w') as f:
             for i in range(len(peptides)):
                 f.write("%d %d %d %s\n" % (i+1, peptides[i][0], peptides[i][1], sequences[i]))
         
         times = np.sort(list(set(data['Time'])))
         
         dexp = np.zeros((len(peptides)+1, len(times)))
-        dexp[0] = times
+        dexp[0] = times / 60
         for pep in range(1, len(peptides)+1):
             subdata = data[(data['Start'] == peptides[pep-1][0]) &\
                            (data['End'] == peptides[pep-1][1])]        
-            control = np.average(subdata[subdata['Exposure'] == times[0]]['Dt'])
+            control = np.average(subdata[subdata['Time'] == times[0]]['Dt'])
             
             if norm_method == "1":
                 maxUptake = d2o_perc/100 * list(set(subdata['MaxUptake']))[0]
             elif norm_method == "2":
-                fd_control = subdata[subdata['Exposure'] == times[-1]]['Dt']
+                fd_control = subdata[subdata['Time'] == times[-1]]['Dt']
                 if len(fd_control) > 0:
                     maxUptake = np.average(fd_control)
                 else:
                     maxUptake = back_ex_perc/100 * list(set(subdata['MaxUptake']))[0]
-
             else:
                 print("Normalization method not valid!")
                 exit()
     
             for j in range(len(times)):
                 data_t = subdata[subdata['Time'] == times[j]]
-                Dt = (data_t['Dt'] - control) / maxUptake
+                if norm_method == "1":
+                    Dt = (np.average(data_t['Dt']) - control) / maxUptake
+                elif norm_method == "2":
+                    Dt = (data_t['Dt'] - control) / (maxUptake - control)
                 if len(Dt) > 0:
                     uptake = np.average(Dt)
                 else:
                     print("  Note: missing time point %5.1f for peptide %s in state %s" % (times[j], sequences[pep-1], state))
                     uptake = "NaN"
-                dexp[pep][j] = uptake
-        np.savetxt(infile.replace(".csv", "_%s.dexp" % state), np.transpose(dexp), fmt = "%5.5f")
+                
+                if uptake < 0:
+                    dexp[pep][j] = 0
+                elif uptake > 1:
+                    dexp[pep][j] = 1
+                else:
+                    dexp[pep][j] = uptake
+                    
+        if norm_method == "2":
+            np.savetxt(infile.replace(".csv", "_%s.dexp" % state), np.transpose(dexp)[:-1], fmt = "%5.5f")
+        else:
+            np.savetxt(infile.replace(".csv", "_%s.dexp" % state), np.transpose(dexp), fmt = "%5.5f")
