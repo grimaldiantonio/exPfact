@@ -61,23 +61,32 @@ def calculate_pfact_from_trajectory(PDB, DCD, OUT, step = 100, bh = 2.00, bc = 0
         monomer = False
     
     number_of_frames = len(u.trajectory)
-    residues = np.sort(list((set(u.select_atoms("protein").residues.resnums))))
-    sequence = u.select_atoms("protein").residues.resnames
+    residues = []
+    sequence = []
+    for chain in chains:
+    	residues.append(np.sort(list((set(u.select_atoms("protein and segid %s" % chain).residues.resnums)))))
+    	sequence.append(u.select_atoms("protein and segid %s" % chain).residues.resnames)
     
-    seq = ""
-    for x in sequence:
-        if x == 'HSD':
-            x = 'His'
-        seq += Bio.SeqUtils.IUPACData.protein_letters_3to1[x.capitalize()]
-    with open(PDB.replace(".pdb", ".seq"), 'w') as f:
-        f.write("%s" % seq)
+    seq = []
+    for chain_num, segid in enumerate(chains):
+        seq.append("")
+        for x in sequence[chain_num]:
+            if x == 'HSD':
+                x = 'His'
+            seq[chain_num] += Bio.SeqUtils.IUPACData.protein_letters_3to1[x.capitalize()]
+        if monomer:
+            with open(PDB.replace(".pdb", ".seq"), 'w') as f:
+               f.write("%s" % seq[chain_num])
+        else:
+            with open(PDB.replace(".pdb", "_chain%s.seq" % segid), 'w') as f:
+               f.write("%s" % seq[chain_num])
     
     pfact = []
     for ts in u.trajectory[0:number_of_frames:step]:
         pfact_t = []
-        for chain in chains:
-            for r in residues:
-                amide_nitrogen = u.select_atoms("protein and segid %s and name N and resid %s" % (chain, r))
+        for chain_num, segid in enumerate(chains):
+            for r in residues[chain_num]:
+                amide_nitrogen = u.select_atoms("protein and segid %s and name N and resid %s" % (segid, r))
             
                 #exclude_neighbours = u.select_atoms("not resid %s and not resid %s and not resid %s" % (r, r-1, r+1))
                 exclude_neighbours = u.select_atoms("not resid %s and not resid %s and not resid %s and not resid %s and not resid %s" % (r, r-1, r+1, r-2, r+2))
@@ -101,15 +110,26 @@ def calculate_pfact_from_trajectory(PDB, DCD, OUT, step = 100, bh = 2.00, bc = 0
     
     np.savetxt("%s_all.txt" % OUT, p_all, fmt = '%.5e')
     
-    if monomer == False:
-        residues = list(residues) * len(chains)
-        residues = [i for i in range(len(residues))]
-
-    with open("%s_avg.txt" % OUT, 'w') as f:
-        for i in range(len(residues)):
-            f.write("%d %.5e %.5e\n" % (residues[i]+1, p_avg[i], p_std[i]))
+    if not monomer:
+        chain_lengths = []
+        first_res = 0
+        for chain_num, segid in enumerate(chains):
+            chain_lengths.append(int(len(residues[chain_num])))
+            if chain_num != 0:
+               first_res += chain_lengths[chain_num-1]
+               first_res -= 1
+            with open("%s_avg_chain%s.txt" % (OUT, segid), 'w') as f:
+                for i in range(len(residues[chain_num])):
+            	    if chain_num == 0:
+                        f.write("%d %.5e %.5e\n" % (residues[chain_num][i], p_avg[i], p_std[i]))
+            	    else:
+            	        f.write("%d %.5e %.5e\n" % (residues[chain_num][i], p_avg[first_res+i], p_std[first_res+i]))
+    else:
+        with open("%s_avg.txt" % OUT, 'w') as f:
+            for i in range(len(residues[0])):
+                f.write("%d %.5e %.5e\n" % (residues[0][i], p_avg[i], p_std[i]))
         
-    return residues, p_avg, p_std, p_all
+    return residues, p_avg, p_std, p_all, chains, monomer
 
 
 if __name__ == '__main__':
@@ -158,19 +178,45 @@ if __name__ == '__main__':
     bc = config['bc']
     
     start = time.time()
-    residues, p_avg, p_std, p_all = calculate_pfact_from_trajectory(PDB, DCD, OUT, step, bh, bc)
+    residues, p_avg, p_std, p_all, chains, monomer = calculate_pfact_from_trajectory(PDB, DCD, OUT, step, bh, bc)
     end = time.time()
     dt = end - start
     print("Elapsed time: %5.5f s" % dt)
     
-    plt.figure()
-    plt.title("Protection Factors from %s" % DCD, fontsize = 15)
-    plt.errorbar(residues, p_avg, p_std, fmt = 'o-', color = 'black', capsize = 2)
-    plt.xlabel("Residue Index", fontsize = 15)
-    plt.ylabel("<ln(P)>", fontsize = 15)
-    plt.ylim(-1, 21)
-    plt.savefig("%s_avg.png" % OUT, dpi = 300)
-    plt.show()
+    if not monomer:
+        chain_lengths = []
+        first_res = 0
+        for chain_num, segid in enumerate(chains):
+       	    chain_lengths.append(int(len(residues[chain_num])))
+            if chain_num == 0:
+                plt.figure()
+                plt.title("Protection Factors from %s, chain %s" % (DCD, segid), fontsize = 15)
+                plt.errorbar(residues[0], p_avg[:len(residues[0])], p_std[:len(residues[0])], fmt = 'o-', color = 'black', capsize = 2)
+                plt.xlabel("Residue Index", fontsize = 15)
+                plt.ylabel("<ln(P)>", fontsize = 15)
+                plt.ylim(-1, 21)
+                plt.savefig("%s_%s_avg.png" % (OUT, segid), dpi = 300)
+                plt.show()
+            else:
+            	first_res += chain_lengths[chain_num-1]
+            	first_res -= 1
+                plt.figure()
+                plt.title("Protection Factors from %s, chain %s" % (DCD, segid), fontsize = 15)
+                plt.errorbar(residues[1], p_avg[first_res:first_res+len(residues[chain_num])], p_std[first_res:first_res+len(residues[chain_num])], fmt = 'o-', color = 'black', capsize = 2)
+                plt.xlabel("Residue Index", fontsize = 15)
+                plt.ylabel("<ln(P)>", fontsize = 15)
+                plt.ylim(-1, 21)
+                plt.savefig("%s_%s_avg.png" % (OUT, segid), dpi = 300)
+                plt.show()
+    else:
+        plt.figure()
+        plt.title("Protection Factors from %s" % DCD, fontsize = 15)
+        plt.errorbar(residues[0], p_avg, p_std, fmt = 'o-', color = 'black', capsize = 2)
+        plt.xlabel("Residue Index", fontsize = 15)
+        plt.ylabel("<ln(P)>", fontsize = 15)
+        plt.ylim(-1, 21)
+        plt.savefig("%s_avg.png" % OUT, dpi = 300)
+        plt.show()
     
     #except:
     #    print(__doc__)
