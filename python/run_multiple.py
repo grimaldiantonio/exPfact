@@ -19,11 +19,11 @@ for n in range(1, N+1):
 	input_file = f"guess_{n}.pfact"
 	subprocess.run(['python',
 					'../python/exPfact.py',
-					"--temp", "277.15",
-					"--pH", "7",
-					"--dexp", "gb1.dexp",
-					"--ass", "gb1.list",
-					"--seq", "gb1.seq",
+					"--temp", "write temperature (in K) here",
+					"--pH", "write pH here",
+					"--dexp", "filename.dexp",
+					"--ass", "filename.ass",
+					"--seq", "filename.seq",
 					"--out", f"out_{n}",
 					guess, f"guess_{n}.pfact"
 					])
